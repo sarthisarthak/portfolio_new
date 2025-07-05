@@ -572,34 +572,34 @@ export default function Portfolio() {
 
       {/* Mobile Navigation */}
       <div className="md:hidden fixed bottom-6 left-6 right-6">
-        <div className="flex justify-center space-x-2 bg-white dark:bg-gray-800 border-4 border-gray-900 dark:border-white p-2">
+        <div className="flex justify-center space-x-2 overflow-x-auto  bg-white dark:bg-gray-800 border-4 border-gray-900 dark:border-white p-2">
           <button
             onClick={() => scrollToSection("home")}
-            className="px-3 py-2 font-bold text-xs"
+            className="px-1 py-2 font-bold text-xs"
           >
             HOME
           </button>
           <button
             onClick={() => scrollToSection("about")}
-            className="px-3 py-2 font-bold text-xs"
+            className="px-1 py-2 font-bold text-xs"
           >
             ABOUT
           </button>
           <button
             onClick={() => scrollToSection("projects")}
-            className="px-3 py-2 font-bold text-xs"
+            className="px-1 py-2 font-bold text-xs"
           >
             PROJECTS
           </button>
           <button
             onClick={() => scrollToSection("skills")}
-            className="px-3 py-2 font-bold text-xs"
+            className="px-1 py-2 font-bold text-xs"
           >
             SKILLS
           </button>
           <button
             onClick={() => scrollToSection("reads")}
-            className="px-3 py-2 font-bold text-xs"
+            className="px-1 py-2 font-bold text-xs"
           >
             READS
           </button>
