@@ -45,9 +45,6 @@ export default function InspirationPage() {
 
       {/* Inspiration Content */}
       <div className="max-w-4xl mx-auto px-6 py-20">
-        <h1 className="text-6xl md:text-7xl font-black mb-12">
-          PEOPLE I ADMIRE
-        </h1>
         <p className="text-xl mb-12 text-gray-600 dark:text-gray-400">
           A few people whose work and mindset push me forward.
         </p>
@@ -70,7 +67,19 @@ export default function InspirationPage() {
                 <strong>Harkirat Singh</strong>
               </li>
               <li>
+                <strong>Thomas Dohmke</strong>
+              </li>
+              <li>
+                <strong>Varun Mayya</strong>
+              </li>
+              <li>
+                <strong>Jeff Bezos</strong>
+              </li>
+              <li>
                 <strong>Raj Vikramaditya</strong>
+              </li>
+              <li>
+                <strong>Paras Chopra</strong>
               </li>
             </ul>
           </div>
