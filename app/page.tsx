@@ -254,7 +254,7 @@ export default function Portfolio() {
       </section>
 
       {/* Philosophy Section */}
-      <section id="philosophy" className="py-20 px-6">
+      {/* <section id="philosophy" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-black mb-12 flex items-center gap-4">
             <Lightbulb size={48} />I BELIEVE
@@ -275,7 +275,7 @@ export default function Portfolio() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Projects Section */}
       <section id="projects" className="py-20 px-6">
