@@ -15,6 +15,7 @@ import {
   Lightbulb,
   Download,
   Code2,
+  Music,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -559,8 +560,13 @@ export default function Portfolio() {
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t-4 border-gray-900 dark:border-white">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="font-bold">© Sarthak Sarthi</p>
+
+          <Link href="/spotify">
+            <Music />
+          </Link>
+
           <Link
             href="/inspire"
             className="font-bold hover:text-orange-500 transition-colors"
