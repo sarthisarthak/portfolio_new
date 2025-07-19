@@ -1,229 +1,230 @@
 "use client";
-
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Music, Play, User, LogOut, Home } from "lucide-react";
+import Link from "next/link";
+
+interface Artist {
+  name: string;
+}
+
+interface Album {
+  name: string;
+}
 
 interface Track {
   id: string;
   name: string;
-  artists: Array<{ name: string }>;
-  album: {
-    name: string;
-    images: Array<{ url: string }>;
-  };
   uri: string;
+  artists: Artist[];
+  album: Album;
 }
 
-interface SpotifyData {
-  topTracks: Track[];
-  currentlyPlaying: any;
-  timestamp: string;
-  error?: string;
+interface CurrentlyPlayingResponse {
+  item: Track | null;
 }
 
 export default function SpotifyPage() {
   const { data: session, status } = useSession();
-  const [spotifyData, setSpotifyData] = useState<SpotifyData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [topTracks, setTopTracks] = useState<Track[]>([]);
+  const [currentTrack, setCurrentTrack] =
+    useState<CurrentlyPlayingResponse | null>(null);
 
-  const fetchSpotifyData = async () => {
-    if (!session) return;
+  // Fix for dark mode consistency
+  useEffect(() => {
+    // Store the current dark mode state
+    const wasDarkMode = document.documentElement.classList.contains("dark");
 
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/spotify");
-      const data = await response.json();
+    // Remove dark class to ensure consistent styling on Spotify page
+    document.documentElement.classList.remove("dark");
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch data");
+    // Cleanup function to restore dark mode state when leaving the page
+    return () => {
+      if (wasDarkMode) {
+        document.documentElement.classList.add("dark");
       }
-
-      setSpotifyData(data);
-    } catch (error) {
-      console.error("Error fetching Spotify data");
-      setError(error instanceof Error ? error.message : "Failed to fetch data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePause = async () => {
-    try {
-      const response = await fetch("/api/spotify/pause", { method: "POST" });
-      if (!response.ok) {
-        throw new Error("Failed to pause");
-      }
-      fetchSpotifyData();
-    } catch (error) {
-      console.error("Error pausing");
-      setError("Failed to pause playback");
-    }
-  };
-
-  const handlePlay = async (trackUri?: string) => {
-    try {
-      const response = await fetch("/api/spotify/play", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackUri }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to play");
-      }
-      fetchSpotifyData();
-    } catch (error) {
-      console.error("Error playing");
-      setError("Failed to start playback");
-    }
-  };
+    };
+  }, []);
 
   useEffect(() => {
     if (session) {
-      fetchSpotifyData();
+      fetchTopTracks();
+      fetchCurrentTrack();
     }
   }, [session]);
 
+  const fetchTopTracks = async () => {
+    try {
+      const response = await fetch("/api/spotify/top-tracks");
+      const data = await response.json();
+      setTopTracks(data.items || []);
+    } catch (error) {
+      console.error("Error fetching top tracks:", error);
+    }
+  };
+
+  const fetchCurrentTrack = async () => {
+    try {
+      const response = await fetch("/api/spotify/currently-playing");
+      const data: CurrentlyPlayingResponse = await response.json();
+      setCurrentTrack(data);
+    } catch (error) {
+      console.error("Error fetching current track:", error);
+    }
+  };
+
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-yellow-300 flex items-center justify-center">
+        <div className="bg-white border-4 border-black rounded-2xl p-8 shadow-[8px_8px_0px_0px_#000]">
+          <div className="flex items-center gap-3">
+            <Music className="w-8 h-8 animate-pulse" />
+            <span className="text-2xl font-black">Loading your vibes...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Spotify Integration</h1>
-          <button
-            onClick={() => signIn("spotify", { callbackUrl: "/spotify" })}
-            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
+      <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400 flex items-center justify-center p-4">
+        <div className="bg-white border-4 border-black rounded-3xl p-8 md:p-12 shadow-[12px_12px_0px_0px_#000] max-w-md w-full text-center">
+          <div className="mb-6">
+            <Music className="w-16 h-16 mx-auto mb-4 text-black" />
+            <h1 className="text-3xl md:text-4xl font-black mb-3">
+              Spotify Vibes
+            </h1>
+            <p className="text-lg text-gray-700">
+              Connect your Spotify to see your music taste
+            </p>
+          </div>
+          <Button
+            onClick={() => signIn("spotify")}
+            className="w-full bg-green-400 hover:bg-green-500 text-black font-black text-lg py-6 border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            Sign in with Spotify
-          </button>
+            <Music className="w-6 h-6 mr-2" />
+            Connect Spotify
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Spotify Dashboard</h1>
-          <button
-            onClick={() => signOut()}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Sign Out
-          </button>
-        </div>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="text-center py-8">Loading Spotify data...</div>
-        ) : spotifyData ? (
-          <div className="space-y-8">
-            {/* Currently Playing */}
-            <div className="bg-gray-100 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Currently Playing</h2>
-              {spotifyData.currentlyPlaying &&
-              spotifyData.currentlyPlaying.item ? (
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={
-                      spotifyData.currentlyPlaying.item.album.images[0]?.url ||
-                      "/placeholder-album.png"
-                    }
-                    alt={spotifyData.currentlyPlaying.item.name}
-                    className="w-16 h-16 rounded"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold">
-                      {spotifyData.currentlyPlaying.item.name}
-                    </h3>
-                    <p className="text-gray-600">
-                      {spotifyData.currentlyPlaying.item.artists
-                        .map((artist: any) => artist.name)
-                        .join(", ")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handlePause}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Pause
-                  </button>
-                </div>
-              ) : (
-                <p>No song currently playing</p>
-              )}
-            </div>
-
-            {/* Top Tracks */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Top 10 Tracks</h2>
-              <div className="grid gap-4">
-                {spotifyData.topTracks && spotifyData.topTracks.length > 0 ? (
-                  spotifyData.topTracks.map((track, index) => (
-                    <div
-                      key={track.id}
-                      className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
-                    >
-                      <span className="font-bold text-lg w-6">{index + 1}</span>
-                      <img
-                        src={
-                          track.album.images[0]?.url || "/placeholder-album.png"
-                        }
-                        alt={track.name}
-                        className="w-12 h-12 rounded"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{track.name}</h3>
-                        <p className="text-gray-600">
-                          {track.artists
-                            .map((artist) => artist.name)
-                            .join(", ")}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handlePlay(track.uri)}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                      >
-                        Play
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p>No top tracks available</p>
-                )}
+    <div className="min-h-screen bg-yellow-300 p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <header className="bg-white border-4 border-black rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#000] mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="bg-blue-400 hover:bg-blue-500 border-3 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px]"
+              >
+                <Home className="w-6 h-6 text-black" />
+              </Link>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-black mb-2">
+                  Your Music Dashboard
+                </h1>
+                <p className="text-lg text-gray-700 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Hey {session.user?.name}! 👋
+                </p>
               </div>
             </div>
-
-            {spotifyData.timestamp && (
-              <div className="text-sm text-gray-500 text-center">
-                Last updated: {new Date(spotifyData.timestamp).toLocaleString()}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <button
-              onClick={fetchSpotifyData}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            <Button
+              onClick={() => signOut()}
+              variant="outline"
+              className="bg-red-400 hover:bg-red-500 text-black font-bold border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] transition-all duration-200 hover:translate-x-[2px] hover:translate-y-[2px]"
             >
-              Load Spotify Data
-            </button>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
-        )}
+        </header>
+
+        {/* Currently Playing */}
+        <section className="mb-8">
+          <h2 className="text-2xl md:text-3xl font-black mb-6 flex items-center gap-3">
+            <Play className="w-8 h-8" />
+            Now Playing
+          </h2>
+          {currentTrack && currentTrack.item ? (
+            <Card className="bg-gradient-to-r from-purple-400 to-pink-400 border-4 border-black rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#000]">
+              <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_#000]">
+                <h3 className="text-xl md:text-2xl font-black mb-2 line-clamp-2">
+                  {currentTrack.item.name}
+                </h3>
+                <p className="text-lg text-gray-700 mb-1">
+                  by{" "}
+                  {currentTrack.item.artists
+                    .map((artist) => artist.name)
+                    .join(", ")}
+                </p>
+                <p className="text-gray-600">
+                  Album: {currentTrack.item.album.name}
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <Card className="bg-gray-200 border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_#000] text-center">
+              <Music className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+              <p className="text-xl font-bold text-gray-600">
+                Nothing playing right now
+              </p>
+              <p className="text-gray-500">Start playing music on Spotify!</p>
+            </Card>
+          )}
+        </section>
+
+        {/* Top Tracks */}
+        <section>
+          <h2 className="text-2xl md:text-3xl font-black mb-6 flex items-center gap-3">
+            🔥 Your Top Tracks
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topTracks.map((track, index) => (
+              <Card
+                key={track.id}
+                className="bg-white border-4 border-black rounded-2xl p-6 shadow-[6px_6px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200 cursor-pointer group"
+              >
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="bg-blue-400 border-3 border-black rounded-xl w-12 h-12 flex items-center justify-center shadow-[3px_3px_0px_0px_#000] group-hover:bg-blue-500 transition-colors">
+                    <span className="text-xl font-black">#{index + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-black mb-1 line-clamp-2">
+                      {track.name}
+                    </h3>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-gray-700 font-semibold line-clamp-1">
+                    {track.artists.map((artist) => artist.name).join(", ")}
+                  </p>
+                  <p className="text-gray-500 text-sm line-clamp-1">
+                    {track.album.name}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+          {topTracks.length === 0 && (
+            <Card className="bg-gray-100 border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_#000] text-center">
+              <Music className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-xl font-bold text-gray-600 mb-2">
+                No top tracks yet
+              </p>
+              <p className="text-gray-500">
+                Listen to more music to see your favorites!
+              </p>
+            </Card>
+          )}
+        </section>
       </div>
     </div>
   );
